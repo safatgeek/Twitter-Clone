@@ -1,7 +1,13 @@
+// @ts-nocheck
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaRegBookmark, FaRegComment, FaRegHeart, FaTrash } from "react-icons/fa";
-import { BiRepost } from "react-icons/bi"
+import {
+  FaRegBookmark,
+  FaRegComment,
+  FaRegHeart,
+  FaTrash,
+} from "react-icons/fa";
+import { BiRepost } from "react-icons/bi";
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
@@ -9,16 +15,16 @@ const Post = ({ post }) => {
   const postOwner = post.user;
 
   const isLiked = true;
-  const isMyPost = false;
+  const isMyPost = true;
   const isCommenting = false;
   const formattedDate = "1h";
 
   const handleDeletePost = () => {};
 
   const handlePostComment = (e) => {
-		e.preventDefault();
-		if (isCommenting) return;
-	};
+    e.preventDefault();
+    if (isCommenting) return;
+  };
 
   const handleLikePost = () => {};
 
@@ -69,8 +75,7 @@ const Post = ({ post }) => {
 
         <div className="flex justify-between mt-3">
           <div className="flex gap-4 items-center w-2/3 justify-between">
-            {/* classname group below div */}
-            <div className="flex gap-1 items-center cursor-pointer">
+            <div className="flex gap-1 items-center cursor-pointer group" onClick={() => document.getElementById("comments_modal" + post._id).showModal()}>
               <FaRegComment className="w-4 h-4 text-slate-500 group-hover:text-sky-400" />
               <span className="text-sm text-slate-500 group-hover:text-sky-400">
                 {post.comments.length}
@@ -138,27 +143,38 @@ const Post = ({ post }) => {
               </form>
             </dialog>
 
-                  {/* group class */}
-            <div className="flex gap-1 items-center cursor-pointer">
+            <div className="flex gap-1 items-center cursor-pointer group">
               <BiRepost className="w-6 h-6 text-slate-500 group-hover:text-green-500" />
-              <span className="text-sm text-slate-500 group-hover:text-green-500">0</span>
+              <span className="text-sm text-slate-500 group-hover:text-green-500">
+                0
+              </span>
             </div>
-                  {/* group class */}
-            <div className="flex gap-1 items-center cursor-pointer" onClick={handleLikePost}>
+
+            <div
+              className="flex gap-1 items-center cursor-pointer group"
+              onClick={handleLikePost}
+            >
               {!isLiked && (
-                <FaRegHeart className="w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500"/>
+                <FaRegHeart className="w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500" />
               )}
 
-              {isLiked && <FaRegHeart className="w-4 h-4 cursor-pointer text-pink-500"/>}
+              {isLiked && (
+                <FaRegHeart className="w-4 h-4 cursor-pointer text-pink-500" />
+              )}
 
-              <span className={`text-sm text-slate-500 group-hover:text-pink-500 ${isLiked ? "text-pink-500 " : ""}`}>
+              <span
+                className={`text-sm text-slate-500 group-hover:text-pink-500 ${
+                  isLiked ? "text-pink-500 " : ""
+                }`}
+              >
                 {post.likes.length}
               </span>
             </div>
           </div>
 
           <div className="flex w-1/3 justify-end gap-2 items-center">
-          <FaRegBookmark className="w-4 h-4 text-slate-500 cursor-pointer" /></div>
+            <FaRegBookmark className="w-4 h-4 text-slate-500 cursor-pointer" />
+          </div>
         </div>
       </div>
     </div>
