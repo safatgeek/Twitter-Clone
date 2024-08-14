@@ -1,10 +1,11 @@
 // @ts-nocheck
+
 import React, { useRef, useState } from "react";
 import EditProfileModal from "./EditProfileModal";
 import { Link } from "react-router-dom";
 import { FaArrowLeft, FaLink } from "react-icons/fa";
 import { POSTS } from "../../utils/db/dummy";
-import { Posts } from "../../components/common/Posts";
+import  Posts  from "../../components/common/Posts";
 import { MdEdit } from "react-icons/md";
 import { IoCalendarOutline } from "react-icons/io5";
 
@@ -23,8 +24,8 @@ const ProfilePage = () => {
 
   const user = {
     _id: "1",
-    fullName: "John Doe",
-    username: "johndoe",
+    fullName: "Tanjim Safat",
+    username: "safat19",
     profileImg: "/avatars/boy2.png",
     coverImg: "/cover.png",
     bio: "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quidem, deleniti? Iusto, alias libero ut esse veniam cupiditate rem aut atque quis.",
@@ -67,7 +68,7 @@ const ProfilePage = () => {
 
               {/* COVER IMAGE & need to understand below div class group/cover, add h-52 by own*/}
 
-              <div className="relative group/cover h-52 bg-red-400">
+              <div className="relative group/cover ">
                 <img
                   src={coverImg || user?.coverImg || "/cover.png"}
                   className="h-52 w-full object-cover"
@@ -201,7 +202,7 @@ const ProfilePage = () => {
             </>
           )}
 
-          <Posts feedType={feedType} username={username} userId={user?._id} />
+          <Posts feedType={feedType} username={user?.username} userId={user?._id} />
         </div>
       </div>
     </>
