@@ -5,28 +5,31 @@ import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js";
 
 export const signup = async (req, res) => {
   try {
+    console.log("Signup request received:", req.body);
+
     const { fullName, username, email, password } = req.body;
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!emailRegex.test(email)) {
+      console.log(email, "Invalid email format");
       return res.status(400).json({ error: "Invalid email format" });
     }
 
-    const existingUser = await User.findOne({ username });
-
-    if (existingUser) {
-      return res.json(400).json({ error: "Username is already taken" });
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      console.log("Email is already taken");
+      return res.status(400).json({ error: "Email is already taken" });
     }
 
-    const existingEmail = await User.findOne({ email });
-
-    if (existingEmail) {
-      return res.json(400).json({ error: "Email is already taken" });
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      console.log("Username is already taken");
+      return res.status(400).json({ error: "Username is already taken" });
     }
 
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ error: "Password must be at least 6 characters" });
+      console.log("Password must be at least 6 characters");
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -39,27 +42,22 @@ export const signup = async (req, res) => {
       password: hashedPassword,
     });
 
-    if (newUser) {
-      generateTokenAndSetCookie(newUser._id, res);
-      await newUser.save();
+    await newUser.save();
+    generateTokenAndSetCookie(newUser._id, res);
 
-      res.status(201).json({
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        username: newUser.username,
-        email: newUser.email,
-        followers: newUser.followers,
-        following: newUser.following,
-        profileImg: newUser.profileImg,
-        coverImg: newUser.coverImg,
-      });
-    } else {
-      console.log("error in signup controller", error.message);
-      res.status(400).json({ error: "Invalid user data" });
-    }
+    console.log("User created successfully:", newUser);
+    res.status(201).json({
+      _id: newUser._id,
+      fullName: newUser.fullName,
+      username: newUser.username,
+      email: newUser.email,
+      followers: newUser.followers,
+      following: newUser.following,
+      profileImg: newUser.profileImg,
+      coverImg: newUser.coverImg,
+    });
   } catch (error) {
     console.log("Error in signup controller", error.message);
-
     res.status(500).json({ error: error.message });
   }
 };

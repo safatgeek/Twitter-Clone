@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from "react";
 import XSvg from "../../../components/svgs/X";
 
@@ -8,17 +9,64 @@ import { FaUser } from "react-icons/fa";
 import { MdPassword } from "react-icons/md";
 import { MdDriveFileRenameOutline } from "react-icons/md";
 
+import { useQueryClient, useMutation } from "@tanstack/react-query"
+import toast from "react-hot-toast";
+
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
     email: "",
     username: "",
-    fullname: "",
+    fullName: "",
     password: "",
   });
 
+  const queryClient = useQueryClient()
+
+  const {mutate, isError, isPending, error} = useMutation({
+    mutationFn: async({ email, username, fullName, password }) => {
+      try {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, username, fullName, password })
+        })
+
+        if (!res.ok) {
+          // Handle HTTP errors
+          const errorData = await res.json();
+          console.log("Server responded with an error:", errorData);
+          throw new Error(errorData.error);
+        }
+  
+        const data = await res.json();
+
+        console.log("User created successfully:", data);
+  
+        return data;
+      } catch (error) {
+        console.error("Error in mutationFn:", error);
+        throw error
+      }
+    },
+
+    onSuccess: () => {
+      toast.success("Account created successfully")
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+    },
+
+    onError: (error) => {
+      console.error("onError callback:", error); // Log entire error object
+      const message = error.message || "Something went wrong";
+      console.log("Error message to be shown:", message); // Log the message being passed to toast
+      toast.error(message);
+    }
+  })
+
   const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(formData);
+    e.preventDefault(); //page won't reload
+    mutate(formData)
   };
 
   const handleInputChange = (e) => {
@@ -66,10 +114,10 @@ const SignUpPage = () => {
             <input
               className="grow"
               type="text"
-              name="fullname"
-              placeholder="Fullname"
+              name="fullName"
+              placeholder="Full Name"
               onChange={handleInputChange}
-              value={formData.fullname}
+              value={formData.fullName}
             />
           </label>
 
@@ -86,8 +134,10 @@ const SignUpPage = () => {
           </label>
 
           <button className="btn rounded-full btn-primary text-white btn-outline w-full">
-            Sign up
+            {isPending ? "Loading..." : "Sign up"}
           </button>
+
+          {isError && <p className="text-red-500">{error.message}</p>}
         </form>
 
         <div className="flex flex-col lg:w-2/3 gap-2 mt-4">

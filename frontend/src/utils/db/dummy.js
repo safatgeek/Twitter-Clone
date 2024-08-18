@@ -4,9 +4,9 @@ export const POSTS = [
 		text: "Let's build a fullstack WhatsApp clone with NEXT.JS 14 😍",
 		img: "/posts/post1.png",
 		user: {
-			username: "johndoe",
+			username: "safat",
 			profileImg: "/avatars/boy1.png",
-			fullName: "John Doe",
+			fullName: "Tanjim Safat",
 		},
 		comments: [
 			{
@@ -25,9 +25,9 @@ export const POSTS = [
 		_id: "2",
 		text: "How you guys doing? 😊",
 		user: {
-			username: "johndoe",
+			username: "rakin",
 			profileImg: "/avatars/boy2.png",
-			fullName: "John Doe",
+			fullName: "Ahnaf Rakin",
 		},
 		comments: [
 			{
@@ -91,26 +91,26 @@ export const POSTS = [
 export const USERS_FOR_RIGHT_PANEL = [
 	{
 		_id: "1",
-		fullName: "John Doe",
-		username: "johndoe",
+		fullName: "Emon Ahmed",
+		username: "emon",
 		profileImg: "/avatars/boy2.png",
 	},
 	{
 		_id: "2",
-		fullName: "Jane Doe",
-		username: "janedoe",
+		fullName: "Raghib Rahat",
+		username: "rahat",
 		profileImg: "/avatars/girl1.png",
 	},
 	{
 		_id: "3",
-		fullName: "Bob Doe",
-		username: "bobdoe",
+		fullName: "Priom AR",
+		username: "priom",
 		profileImg: "/avatars/boy3.png",
 	},
 	{
 		_id: "4",
-		fullName: "Daisy Doe",
-		username: "daisydoe",
+		fullName: "Rafiya Tasnim",
+		username: "rafiya",
 		profileImg: "/avatars/girl2.png",
 	},
 ];
