@@ -1,9 +1,13 @@
+// @ts-nocheck
 import React, { useState } from 'react'
 import { Link } from "react-router-dom";
 
 import XSvg from '../../../components/svgs/X'
 
 import { MdOutlineMail, MdPassword } from 'react-icons/md';
+
+import { useMutation } from "@tanstack/react-query"
+import toast from 'react-hot-toast';
 
 const LoginPage = () => {
 
@@ -12,16 +16,44 @@ const LoginPage = () => {
     password: ""
   })
 
+  const {mutate, isPending, isError, error} = useMutation({
+    mutationFn: async ({ username, password }) => {
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ username, password })
+        })
+
+        const data = await res.json()
+
+        if(!res.ok) {
+          throw new Error(data.error || "Something went wrong")
+        }
+        return data
+
+      } catch (error) {
+        throw new Error(error)
+      }
+    },
+
+    onSuccess: () => {
+      toast.success("Login successful")
+    }
+  })
+
   const handleSubmit = (e) => {
     e.preventDefault()
     console.log(formData)
+    mutate(formData)
   }
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const isError = false
   return (
     <div className='w-screen mx-auto flex h-screen px-10'>
       <div className='flex-1 hidden lg:flex items-center justify-center'>
@@ -54,8 +86,9 @@ const LoginPage = () => {
             value={formData.password}/>
           </label>
 
-          <button className='btn rounded-full btn-primary text-white btn-outline w-full'>Login</button>
-          {isError && <p className='text-red-500'>Something went wrong</p>}
+          <button className='btn rounded-full btn-primary text-white btn-outline w-full'>{isPending ? "Loading..." : "Login"}</button>
+          {isError && <p className='text-red-500'>
+            {error.message}</p>}
         </form>
 
         <div className='flex flex-col lg:w-2/3 gap-2 mt-4'>
