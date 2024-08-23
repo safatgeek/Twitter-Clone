@@ -49,7 +49,7 @@ const Post = ({ post }) => {
 
   const postOwner = post.user;
 
-  const isLiked = true;
+  const isLiked = false;
   const isMyPost = authUser._id === post.user._id
   const isCommenting = false;
   const formattedDate = "1h";
@@ -112,8 +112,10 @@ const Post = ({ post }) => {
           )}
         </div>
 
+        {/* Long post's text Display Problem */}
+
         <div className="flex flex-col gap-3 overflow-hidden">
-          <span>{post.text}</span>
+          <span className="break-all">{post.text}</span>
           {post.img && (
             <img
               src={post.img}
