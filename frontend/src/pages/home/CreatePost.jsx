@@ -33,13 +33,13 @@ const CreatePost = () => {
         const data = await res.json()
 
         if (!res.ok) {
-          throw new Error(error);
+          throw new Error(data.error);
         }
         console.log("Error 1 is here:",error)
         return data;
       } catch (error) {
         console.log("Error 2 is here:",error)
-        throw new Error(error);
+        throw new Error(error.message);
       }
     },
 
