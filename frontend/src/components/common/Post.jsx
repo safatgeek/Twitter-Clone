@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaRegBookmark, FaRegComment, FaTrash } from "react-icons/fa";
 import { GoHeartFill } from "react-icons/go";
@@ -7,6 +7,9 @@ import { BiRepost } from "react-icons/bi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "./LoadingSpinner";
+import { useRef } from "react";
+
+import { format } from "date-fns";
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
@@ -66,15 +69,53 @@ const Post = ({ post }) => {
 
       queryClient.setQueryData(["posts"], (oldData) => {
         return oldData.map((p) => {
-          if(p._id === post._id) {
+          if (p._id === post._id) {
             return {
-              ...p, likes: updatedLikes
-            }
+              ...p,
+              likes: updatedLikes,
+            };
           }
 
-          return p
-        })
-      })
+          return p;
+        });
+      });
+    },
+  });
+
+  const { mutate: commentPost, isPending: isCommenting } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(`/api/posts/comment/${post._id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: comment }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Something went wrong");
+        }
+
+        return data;
+      } catch (error) {
+        throw new Error(error.message);
+      }
+    },
+
+    onSuccess: (updatedComments) => {
+      setComment('')
+      queryClient.setQueryData(["posts"], (oldData) => {
+        return oldData.map((p) => {
+          if (p._id === post._id) {
+            return { ...p, comments: updatedComments };
+          }
+
+          return p;
+        });
+      });
     },
   });
 
@@ -83,7 +124,6 @@ const Post = ({ post }) => {
   const isLiked = post.likes.includes(authUser._id);
 
   const isMyPost = authUser._id === post.user._id;
-  const isCommenting = false;
   const formattedDate = "1h";
 
   const handleDeletePost = () => {
@@ -93,6 +133,7 @@ const Post = ({ post }) => {
   const handlePostComment = (e) => {
     e.preventDefault();
     if (isCommenting) return;
+    commentPost();
   };
 
   const handleLikePost = (e) => {
@@ -105,6 +146,14 @@ const Post = ({ post }) => {
   if (!postOwner) {
     return <p>Post owner information is missing.</p>;
   }
+
+  const commentsRef = useRef(null);
+
+  useEffect(() => {
+    if (commentsRef.current) {
+      commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
+    }
+  }, [post.comments]);
 
   return (
     <div className="flex gap-2 items-start p-4 border-b border-gray-700">
@@ -145,10 +194,8 @@ const Post = ({ post }) => {
           )}
         </div>
 
-        {/* Long post's text Display Problem */}
-
         <div className="flex flex-col gap-3 overflow-hidden">
-          <span className="break-all">{post.text}</span>
+          <span>{post.text}</span>
           {post.img && (
             <img
               src={post.img}
@@ -177,37 +224,61 @@ const Post = ({ post }) => {
             >
               <div className="modal-box rounded border border-gray-600">
                 <h3 className="font-bold text-lg mb-4">COMMENTS</h3>
-                <div className="flex flex-col gap-3 max-h-60 overflow-auto">
+                <div
+                  className="flex flex-col gap-3 max-h-60 overflow-auto"
+                  ref={commentsRef}
+                >
                   {post.comments.length === 0 && (
                     <p>No comments yet 🤔 Be the first one 😉</p>
                   )}
 
-                  {post.comments.map((comment) => (
-                    <div key={comment._id} className="flex gap-2 items-start">
-                      <div className="avatar">
-                        <div className="w-8 rounded-full">
-                          <img
-                            src={
-                              comment.user.profileImg ||
-                              "/avatar-placeholder.png"
-                            }
-                          />
-                        </div>
-                      </div>
+                  {post.comments.map((comment) => {
+                    console.log("here is time:", comment.createdAt)
+                    let formattedTime = "Invalid Date";
 
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-1">
-                          <span className="font-bold">
-                            {comment.user.fullName}
-                          </span>
-                          <span className="text-gray-700 text-sm">
-                            @{comment.user.username}
-                          </span>
+                    if (comment.createdAt) {
+                      try {
+                        formattedTime = format(
+                          new Date(comment.createdAt),
+                          "MMMM yyyy"
+                        )
+                      } catch (error) {
+                        console.error("Date formatting error:", error);
+                      }
+                    }
+
+                    return (
+                      <div key={comment._id} className="flex gap-2 items-start">
+                        <div className="avatar">
+                          <div className="w-8 rounded-full">
+                            <img
+                              src={
+                                comment.user.profileImg ||
+                                "/avatar-placeholder.png"
+                              }
+                            />
+                          </div>
                         </div>
-                        <div className="text-sm">{comment.text}</div>
+
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-1">
+                            <span className="font-bold">
+                              {comment.user.fullName}
+                            </span>
+
+                            <span className="text-gray-700 text-sm">
+                              @{comment.user.username}
+                            </span>
+
+                            <span className="text-gray-500 text-xs">
+                              • {formattedTime}
+                            </span>
+                          </div>
+                          <div className="text-sm">{comment.text}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <form
@@ -222,7 +293,7 @@ const Post = ({ post }) => {
                   />
 
                   <button className="btn btn-primary rounded-full btn-sm text-white px-4">
-                    {isCommenting ? "LoadingSpinner" : "Post"}
+                    {isCommenting ? <LoadingSpinner size="md" /> : "Post"}
                   </button>
                 </form>
               </div>
