@@ -1,15 +1,19 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
+import { useRef } from "react";
+
 import { Link } from "react-router-dom";
+
 import { FaRegBookmark, FaRegComment, FaTrash } from "react-icons/fa";
 import { GoHeartFill } from "react-icons/go";
 import { BiRepost } from "react-icons/bi";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-hot-toast";
-import LoadingSpinner from "./LoadingSpinner";
-import { useRef } from "react";
 
-import { format } from "date-fns";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { toast } from "react-hot-toast";
+
+import LoadingSpinner from "./LoadingSpinner";
+import { formatPostDate } from "../../utils/date";
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
@@ -106,7 +110,7 @@ const Post = ({ post }) => {
     },
 
     onSuccess: (updatedComments) => {
-      setComment('')
+      setComment("");
       queryClient.setQueryData(["posts"], (oldData) => {
         return oldData.map((p) => {
           if (p._id === post._id) {
@@ -124,7 +128,8 @@ const Post = ({ post }) => {
   const isLiked = post.likes.includes(authUser._id);
 
   const isMyPost = authUser._id === post.user._id;
-  const formattedDate = "1h";
+  
+  const formattedDate = formatPostDate(post.createdAt)
 
   const handleDeletePost = () => {
     deletePost();
@@ -233,20 +238,6 @@ const Post = ({ post }) => {
                   )}
 
                   {post.comments.map((comment) => {
-                    console.log("here is time:", comment.createdAt)
-                    let formattedTime = "Invalid Date";
-
-                    if (comment.createdAt) {
-                      try {
-                        formattedTime = format(
-                          new Date(comment.createdAt),
-                          "MMMM yyyy"
-                        )
-                      } catch (error) {
-                        console.error("Date formatting error:", error);
-                      }
-                    }
-
                     return (
                       <div key={comment._id} className="flex gap-2 items-start">
                         <div className="avatar">
@@ -271,7 +262,7 @@ const Post = ({ post }) => {
                             </span>
 
                             <span className="text-gray-500 text-xs">
-                              • {formattedTime}
+                              • {formatPostDate(comment.createdAt)}
                             </span>
                           </div>
                           <div className="text-sm">{comment.text}</div>
@@ -310,7 +301,16 @@ const Post = ({ post }) => {
               </span>
             </div>
 
-            {isLiking && <LoadingSpinner size="sm" />}
+            {isLiking && (
+              <div className="flex gap-1 items-center">
+                <GoHeartFill className="w-[18px] h-[18px] text-pink-300" />
+                <span
+                  className="text-pink-300"
+                >
+                  {post.likes.length}
+                </span>
+              </div>
+            )}
 
             {!isLiking && (
               <div
