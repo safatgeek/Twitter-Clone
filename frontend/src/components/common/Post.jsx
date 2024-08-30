@@ -60,7 +60,7 @@ const Post = ({ post }) => {
         if (!res.ok) {
           throw new Error(data.error);
         }
-
+        console.log("like post", data)
         return data;
       } catch (error) {
         throw new Error(error.message);
@@ -72,6 +72,7 @@ const Post = ({ post }) => {
       // queryClient.invalidateQueries({ queryKey: ["posts"] });
 
       queryClient.setQueryData(["posts"], (oldData) => {
+        console.log("should update")
         return oldData.map((p) => {
           if (p._id === post._id) {
             return {
@@ -145,8 +146,6 @@ const Post = ({ post }) => {
     if (isLiking) return;
     likePost();
   };
-
-  console.log(postOwner);
 
   if (!postOwner) {
     return <p>Post owner information is missing.</p>;

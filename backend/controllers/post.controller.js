@@ -167,11 +167,14 @@ export const getAllPosts = async (req, res) => {
 
 export const getLikedPosts = async (req, res) => {
 
-  const userId = req.params.id
+  const userId = req.params.userid
+
+  console.log(userId)
 
   try {
     const user = await User.findById(userId)
     if(!user) {
+      console.log("user not found", userId)
       return res.status(404).json({ error: "User not found" })
     }
 
@@ -183,8 +186,9 @@ export const getLikedPosts = async (req, res) => {
       path: "comments.user",
       select: "-password"
     })
-
+    console.log(likedPosts)
     res.status(200).json(likedPosts)
+
   } catch (error) {
     res.status(500).json({ error: error.message });
     console.log("Error in getLikedPosts controller: ", error);

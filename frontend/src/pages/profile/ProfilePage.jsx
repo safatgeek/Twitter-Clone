@@ -1,13 +1,17 @@
 // @ts-nocheck
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import EditProfileModal from "./EditProfileModal";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { FaArrowLeft, FaLink } from "react-icons/fa";
 import { POSTS } from "../../utils/db/dummy";
 import  Posts  from "../../components/common/Posts";
 import { MdEdit } from "react-icons/md";
 import { IoCalendarOutline } from "react-icons/io5";
+import { useQuery } from '@tanstack/react-query';
+import { formatMemberSinceDate } from "../../utils/date";
+
+import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton"
 
 const ProfilePage = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -17,22 +21,32 @@ const ProfilePage = () => {
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
 
-  const isLoading = false;
   const isMyProfile = true;
   const amIFollowing = false;
-  const memberSinceDate = "Joined August 2022 ";
+ 
 
-  const user = {
-    _id: "1",
-    fullName: "Tanjim Safat",
-    username: "safat19",
-    profileImg: "/avatars/boy2.png",
-    coverImg: "/cover.png",
-    bio: "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quidem, deleniti? Iusto, alias libero ut esse veniam cupiditate rem aut atque quis.",
-    link: "https://chat-app-bd-uqof.onrender.com/",
-    following: ["1", "2", "3"],
-    followers: ["1", "2", "3"],
-  };
+  const { username } = useParams()
+
+  const {data:user, isLoading, refetch, isRefetching} = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`/api/users/profile/${username}`)
+
+        const data = await res.json()
+
+        if(!res.ok) {
+          throw new Error(data.error)
+        }
+
+        return data
+      } catch (error) {
+        throw new Error(error.message)
+      }
+    }
+  })
+
+  const memberSinceDate = formatMemberSinceDate(user?.createdAt)
 
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
@@ -47,11 +61,17 @@ const ProfilePage = () => {
     }
   };
 
+  useEffect(() => {
+    refetch()
+  }, [username, refetch])
+
   return (
     <>
       <div className="flex-[4_4_0] border-r border-gray-700 min-h-screen">
+        {(isLoading || isRefetching) && <ProfileHeaderSkeleton />}
+        {!isLoading && !isRefetching && !user && <p className="text-center text-lg mt-4">User not found</p>}
         <div className="flex flex-col">
-          {!isLoading && user && (
+          {!isLoading && !isRefetching && user && (
             <>
               <div className="flex gap-10 px-4 py-2 items-center">
                 <Link to="/">
@@ -202,7 +222,7 @@ const ProfilePage = () => {
             </>
           )}
 
-          <Posts feedType={feedType} username={user?.username} userId={user?._id} />
+          <Posts feedType={feedType} username={username} userId={user?._id} />
         </div>
       </div>
     </>
