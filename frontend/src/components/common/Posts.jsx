@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import PostSkeleton from '../skeletons/PostSkeleton'
 import Post from './Post'
 import { useQuery } from '@tanstack/react-query';
@@ -24,8 +24,8 @@ const Posts = ({ feedType, username, userId }) => {
   const POST_ENDPOINT = getPostEndpoint()
   console.log("Before fetched", POST_ENDPOINT)
 
-  const {data:posts, isLoading} = useQuery({
-    queryKey: ["posts", feedType, username, userId],
+  const { data:posts, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ["posts"],
     queryFn: async () => {
       try {
         console.log("fetch called", POST_ENDPOINT)
@@ -43,22 +43,25 @@ const Posts = ({ feedType, username, userId }) => {
         throw new Error(error)
       }
     },
-    refetchOnMount: true
   })
+
+  useEffect(() => {
+    refetch()
+  }, [refetch, feedType, username, userId])
 
   
   return (
     <>
-      {isLoading && (
+      {isLoading || isRefetching && (
         <div>
           <PostSkeleton />
           <PostSkeleton />
           <PostSkeleton />
         </div>
       )}
-      {!isLoading && posts?.length === 0 && <p>No post in this tab. Switch 👻</p>}
+      {!isLoading && !isRefetching && posts?.length === 0 && <p>No post in this tab. Switch 👻</p>}
 
-      {!isLoading && posts && (
+      {!isLoading && !isRefetching && posts && (
         <div>
           {posts.map((post) => (
             <Post key={post._id} post={post}/>
