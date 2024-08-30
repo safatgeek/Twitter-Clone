@@ -59,6 +59,7 @@ const CreatePost = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if(isPending) return;
     createPost({ text, img });
   };
 
