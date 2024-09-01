@@ -5,13 +5,15 @@ import EditProfileModal from "./EditProfileModal";
 import { Link, useParams } from "react-router-dom";
 import { FaArrowLeft, FaLink } from "react-icons/fa";
 import { POSTS } from "../../utils/db/dummy";
-import  Posts  from "../../components/common/Posts";
+import Posts from "../../components/common/Posts";
 import { MdEdit } from "react-icons/md";
 import { IoCalendarOutline } from "react-icons/io5";
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../utils/date";
 
-import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton"
+import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
+import useFollow from "./../../hooks/useFollow";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -21,32 +23,77 @@ const ProfilePage = () => {
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
 
-  const isMyProfile = true;
-  const amIFollowing = false;
- 
+  const { username } = useParams();
 
-  const { username } = useParams()
+  const queryClient = useQueryClient();
 
-  const {data:user, isLoading, refetch, isRefetching} = useQuery({
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+
+  const {
+    data: user,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ["userProfile"],
     queryFn: async () => {
       try {
-        const res = await fetch(`/api/users/profile/${username}`)
+        const res = await fetch(`/api/users/profile/${username}`);
 
-        const data = await res.json()
+        const data = await res.json();
 
-        if(!res.ok) {
-          throw new Error(data.error)
+        if (!res.ok) {
+          throw new Error(data.error);
         }
 
-        return data
+        return data;
       } catch (error) {
-        throw new Error(error.message)
+        throw new Error(error.message);
       }
-    }
-  })
+    },
+  });
 
-  const memberSinceDate = formatMemberSinceDate(user?.createdAt)
+  const { mutate: updateProfile, isPending: isUpadatingProfile } = useMutation({
+    mutationFn: async ({ profileImg, coverImg }) => {
+      try {
+        const res = await fetch("/api/users/update", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            profileImg,
+            coverImg,
+          }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error);
+        }
+
+        return data;
+      } catch (error) {
+        throw new Error(error.message);
+      }
+    },
+
+    onSuccess: () => {
+      toast.success("Profile updated successfully");
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["authUser"] }),
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
+      ]);
+      setProfileImg(null);
+      setCoverImg(null);
+    },
+
+    onError: () => {
+      toast.error(error.message);
+    },
+  });
+
+  const memberSinceDate = formatMemberSinceDate(user?.createdAt);
 
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
@@ -61,15 +108,23 @@ const ProfilePage = () => {
     }
   };
 
+  const isMyProfile = authUser._id === user?._id;
+
+  const { follow, isPending } = useFollow();
+
+  const amIFollowing = authUser?.following.includes(user?._id);
+
   useEffect(() => {
-    refetch()
-  }, [username, refetch])
+    refetch();
+  }, [username, refetch]);
 
   return (
     <>
       <div className="flex-[4_4_0] border-r border-gray-700 min-h-screen">
         {(isLoading || isRefetching) && <ProfileHeaderSkeleton />}
-        {!isLoading && !isRefetching && !user && <p className="text-center text-lg mt-4">User not found</p>}
+        {!isLoading && !isRefetching && !user && (
+          <p className="text-center text-lg mt-4">User not found</p>
+        )}
         <div className="flex flex-col">
           {!isLoading && !isRefetching && user && (
             <>
@@ -143,12 +198,43 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end px-4 mt-5">
-                {isMyProfile && <EditProfileModal />}
+              <div className="px-4 mt-5 relative">
+                {isMyProfile && (
+                  <div className="absolute right-[1rem]">
+                    <EditProfileModal />
+                  </div>
+                )}
 
                 {!isMyProfile && (
-                  <button className="btn btn-outline rounded-full btn-sm">
-                    {amIFollowing ? "Unfollow" : "Follow"}
+                  <div className="absolute right-[1rem]">
+                    {!isPending && (
+                      <button
+                        className="btn btn-outline rounded-full btn-sm"
+                        onClick={() => follow(user?._id)}
+                      >
+                        {!isPending && amIFollowing && "✓ Following"}
+                        {!isPending && !amIFollowing && "+ Follow"}
+                      </button>
+                    )}
+
+                    {isPending && !amIFollowing && (
+                      <div className="bg-stone-300 h-[32px] w-[80.83px] rounded-full"></div>
+                    )}
+
+                    {isPending && amIFollowing && (
+                      <div className="bg-stone-300 h-[32px] w-[101.863px] rounded-full"></div>
+                    )}
+                  </div>
+                )}
+
+                {(coverImg || profileImg) && (
+                  <button
+                    className="btn btn-primary absolute right-[7.5rem] rounded-full text-white btn-sm"
+                    onClick={async () => {
+                      await updateProfile({ coverImg, profileImg });
+                    }}
+                  >
+                    {isUpadatingProfile ? "Updating..." : "Save"}
                   </button>
                 )}
               </div>

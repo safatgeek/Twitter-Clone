@@ -40,7 +40,6 @@ function App() {
   }
   return (
     <div className="flex max-w-6xl mx-auto">
-      {/* common component bcz it's not wrapped with routes */}
       {authUser && <Sidebar />}
       <Routes>
         <Route
