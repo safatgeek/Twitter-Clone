@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 import React, { useEffect, useRef, useState } from "react";
 import EditProfileModal from "./EditProfileModal";
 import { Link, useParams } from "react-router-dom";
@@ -8,12 +7,12 @@ import { POSTS } from "../../utils/db/dummy";
 import Posts from "../../components/common/Posts";
 import { MdEdit } from "react-icons/md";
 import { IoCalendarOutline } from "react-icons/io5";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../utils/date";
 
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import useFollow from "./../../hooks/useFollow";
-import toast from "react-hot-toast";
+import useUpdateProfile from "../../hooks/useUpdateProfile";
 
 const ProfilePage = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -23,9 +22,9 @@ const ProfilePage = () => {
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
 
-  const { username } = useParams();
+  const {updateProfile, isUpadatingProfile} = useUpdateProfile()
 
-  const queryClient = useQueryClient();
+  const { username } = useParams();
 
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 
@@ -50,46 +49,6 @@ const ProfilePage = () => {
       } catch (error) {
         throw new Error(error.message);
       }
-    },
-  });
-
-  const { mutate: updateProfile, isPending: isUpadatingProfile } = useMutation({
-    mutationFn: async ({ profileImg, coverImg }) => {
-      try {
-        const res = await fetch("/api/users/update", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            profileImg,
-            coverImg,
-          }),
-        });
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error);
-        }
-
-        return data;
-      } catch (error) {
-        throw new Error(error.message);
-      }
-    },
-
-    onSuccess: () => {
-      toast.success("Profile updated successfully");
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["authUser"] }),
-        queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
-      ]);
-      setProfileImg(null);
-      setCoverImg(null);
-    },
-
-    onError: () => {
-      toast.error(error.message);
     },
   });
 
@@ -140,9 +99,6 @@ const ProfilePage = () => {
                   </span>
                 </div>
               </div>
-
-              {/* COVER IMAGE & need to understand below div class group/cover, add h-52 by own*/}
-
               <div className="relative group/cover ">
                 <img
                   src={coverImg || user?.coverImg || "/cover.png"}
@@ -201,7 +157,7 @@ const ProfilePage = () => {
               <div className="px-4 mt-5 relative">
                 {isMyProfile && (
                   <div className="absolute right-[1rem]">
-                    <EditProfileModal />
+                    <EditProfileModal authUser={authUser} />
                   </div>
                 )}
 
@@ -232,6 +188,8 @@ const ProfilePage = () => {
                     className="btn btn-primary absolute right-[7.5rem] rounded-full text-white btn-sm"
                     onClick={async () => {
                       await updateProfile({ coverImg, profileImg });
+                      setCoverImg(null)
+                      setProfileImg(null)
                     }}
                   >
                     {isUpadatingProfile ? "Updating..." : "Save"}
