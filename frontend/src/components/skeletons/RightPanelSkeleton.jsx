@@ -2,7 +2,7 @@ import React from "react";
 
 const RightPanelSkeleton = () => {
 	return (
-		<div className='flex flex-col gap-2 w-[14.7rem] my-2'>
+		<div className='flex flex-col gap-2 w-[241.263px] my-2'>
 			<div className='flex gap-2 items-center'>
 				<div className='skeleton w-8 h-8 rounded-full shrink-0'></div>
 				<div className='flex flex-1 justify-between'>

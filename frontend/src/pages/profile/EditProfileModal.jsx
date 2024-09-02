@@ -1,7 +1,7 @@
-// @ts-nocheck
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import useUpdateProfile from "../../hooks/useUpdateProfile";
 
-const EditProfileModal = () => {
+const EditProfileModal = ({ authUser }) => {
   const [formData, setFormData] = useState({
     fullName: "",
     username: "",
@@ -12,17 +12,16 @@ const EditProfileModal = () => {
     currentPassword: "",
   });
 
-  const isUpdatingProfile = false;
-
+  const { updateProfile, isUpadatingProfile } = useUpdateProfile();
   // Create a ref for the dialog element
   const dialogRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Perform the update operation
-    // After successful update, close the modal
-    alert("Profile updated successfully");
+    // @ts-ignore
+    updateProfile(formData)
     if (dialogRef.current) {
+      // @ts-ignore
       dialogRef.current.close();
     }
   };
@@ -31,12 +30,26 @@ const EditProfileModal = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  useEffect(() => {
+    // @ts-ignore
+    setFormData({
+      fullName: authUser.fullName,
+      username: authUser.username,
+      email: authUser.email,
+      bio: authUser.bio,
+      newPassword: "",
+      currentPassword: ""
+      
+    })
+  }, [authUser])
+
   return (
     <>
       <button
         className="btn btn-outline rounded-full btn-sm"
         onClick={() => {
           if (dialogRef.current) {
+            // @ts-ignore
             dialogRef.current.showModal();
           }
           console.log("Clicked");
@@ -46,7 +59,7 @@ const EditProfileModal = () => {
       </button>
       <dialog id="edit_profile_modal" className="modal" ref={dialogRef}>
         <div className="modal-box border rounded-md border-gray-700 shadow-md">
-          <h3 className="font-bold text-lg my-3">Edit Profile</h3>
+          <h3 className="font-bold text-lg my-3">Update Profile</h3>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-wrap gap-2">
               <input
@@ -116,8 +129,10 @@ const EditProfileModal = () => {
               onChange={handleInputChange}
             />
 
-            <button className="btn btn-primary rounded-full btn-sm text-white">
-              {isUpdatingProfile ? "Updating..." : "Update"}
+            <button
+              className="btn btn-primary rounded-full btn-sm text-white"
+            >
+              {isUpadatingProfile ? "Updating..." : "Update"}
             </button>
           </form>
         </div>
