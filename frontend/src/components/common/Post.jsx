@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect, useState } from "react";
 import { useRef } from "react";
 
@@ -126,7 +125,7 @@ const Post = ({ post }) => {
 
   const postOwner = post.user;
 
-  const isLiked = post.likes.includes(authUser._id);
+  // const isLiked = post.likes.includes(authUser._id);
 
   const isMyPost = authUser._id === post.user._id;
   
@@ -218,7 +217,7 @@ const Post = ({ post }) => {
             >
               <FaRegComment className="w-4 h-4 text-slate-500 group-hover:text-sky-400" />
               <span className="text-sm text-slate-500 group-hover:text-sky-400">
-                {post.comments.length}
+                {/* {post.comments.length} */}
               </span>
             </div>
 
@@ -232,11 +231,11 @@ const Post = ({ post }) => {
                   className="flex flex-col gap-3 max-h-60 overflow-auto"
                   ref={commentsRef}
                 >
-                  {post.comments.length === 0 && (
+                  {/* {post.comments.length === 0 && (
                     <p>No comments yet 🤔 Be the first one 😉</p>
-                  )}
+                  )} */}
 
-                  {post.comments.map((comment) => {
+                  {/* {post.comments.map((comment) => {
                     return (
                       <div key={comment._id} className="flex gap-2 items-start">
                         <div className="avatar">
@@ -268,7 +267,7 @@ const Post = ({ post }) => {
                         </div>
                       </div>
                     );
-                  })}
+                  })} */}
                 </div>
 
                 <form
@@ -311,7 +310,7 @@ const Post = ({ post }) => {
               </div>
             )}
 
-            {!isLiking && (
+            {/* {!isLiking && (
               <div
                 className="flex gap-1 items-center cursor-pointer group"
                 onClick={handleLikePost}
@@ -332,7 +331,7 @@ const Post = ({ post }) => {
                   {post.likes.length}
                 </span>
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="flex w-1/3 justify-end gap-2 items-center">

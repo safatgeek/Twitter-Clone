@@ -1,51 +1,34 @@
-import mongoose from "mongoose";
-
-const commentSchema = new mongoose.Schema({
-  text: {
-    type: String,
-    required: true,
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-});
+import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
-
     text: {
       type: String,
     },
-
     img: {
       type: String,
     },
-
-    likes: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-
-    comments: [
-     commentSchema
-    ],
   },
   { timestamps: true }
 );
 
-const Post = mongoose.model("Post", postSchema);
+// Virtual to create reverse relation for comments
+postSchema.virtual('comments', {
+  ref: 'Comment', // The model to use
+  localField: '_id', // Find comments where `post._id` matches `comment.post`
+  foreignField: 'post', // The field in the Comment model that refers to Post
+  justOne: false, // Set to false since we want to retrieve multiple comments
+});
+
+// Ensure virtuals are included when converting documents to JSON or Object
+postSchema.set('toObject', { virtuals: true });
+postSchema.set('toJSON', { virtuals: true });
+
+const Post = mongoose.model('Post', postSchema);
 
 export default Post;

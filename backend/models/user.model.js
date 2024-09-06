@@ -21,22 +21,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    followers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        defa: [],
-      },
-    ],
-
-    following: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        defa: [],
-      },
-    ],
-
+    
     profileImg: {
       type: String,
       default: "",
@@ -55,15 +40,7 @@ const userSchema = new mongoose.Schema(
     link: {
       type: String,
       default: "",
-    },
-
-    likedPosts: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Post",
-        default: []
-      }
-    ]
+    }
   },
   { timestamps: true }
 );
