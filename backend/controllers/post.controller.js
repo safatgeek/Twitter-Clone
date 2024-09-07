@@ -156,9 +156,9 @@ export const getMoreComments = async (req, res) => {
 
   try {
     const comments = await Comment.find({ post: postId })
-      .sort({ createdAt: 1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
+      .sort({ createdAt: -1 })
       .populate({
         path: "user",
         select: "-password",
@@ -179,20 +179,20 @@ export const getMoreComments = async (req, res) => {
 
 
 export const getAllPosts = async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10 } = req.query
 
   try {
     const posts = await Post.find()
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit) // Skip the previous posts based on the page number
-      .limit(parseInt(limit)) // Limit the results to 10
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit)) 
       .populate({
         path: "user",
         select: "-password",
       })
       .populate({
         path: "comments",
-        options: { limit: 10 }, // Initially fetch only 10 comments
+        options: { limit: 10 },
         populate: {
           path: "user",
           select: "-password",
@@ -216,7 +216,9 @@ export const getAllPosts = async (req, res) => {
 export const getLikedPosts = async (req, res) => {
   const userId = req.params.userid;
 
-  console.log(userId);
+  const { page = 1, limit = 10 } = req.query;
+
+  const skip = (page - 1) * limit;
 
   try {
     const user = await User.findById(userId);
@@ -225,28 +227,48 @@ export const getLikedPosts = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const likedPosts = await Like.find({ user: { $in: userId } })
+    const totalPosts = await Like.countDocuments({ user: userId });
+
+    if (totalPosts === 0) {
+      return res.status(200).json({ message: "User didn't like any post" });
+    }
+
+    const likedPosts = await Like.find({ user: userId })
       .populate({
         path: "post",
-
         populate: {
           path: "user",
           select: "-password",
         }
       })
-    const populatedPosts = likedPosts.map((likePost => likePost.post))
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
 
-    console.log(populatedPosts);
-    res.status(200).json(populatedPosts);
+    const populatedPosts = likedPosts.map((likePost) => likePost.post);
+
+    return res.status(200).json({
+      populatedPosts,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalPosts / limit)
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
     console.log("Error in getLikedPosts controller: ", error);
   }
 };
 
+
 export const getFollowingPosts = async (req, res) => {
+
+  const userId = req.user._id;
+
+  const { page = 1, limit = 10 } = req.query
+
+  const skip = (page - 1) * limit;
+
+
   try {
-    const userId = req.user._id;
 
     const followingUsers = await Follow.find({ followers: userId }).select(
       "following"
@@ -260,15 +282,24 @@ export const getFollowingPosts = async (req, res) => {
       (followingUser) => followingUser.following
     );
 
+    const totalPosts = await Post.countDocuments({ user: { $in: followingIds } })
+
     const feedPosts = await Post.find({ user: { $in: followingIds } })
-      .sort({ createdAt: -1 })
       .populate({
         path: "user",
         select: "-password",
       })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
 
-    console.log("here is followingUsers:", followingUsers);
-    return res.status(200).json(feedPosts);
+      console.log(totalPosts)
+
+    return res.status(200).json({
+      feedPosts,
+      currentPage: page,
+      totalPages: Math.ceil(totalPosts / limit)
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
     console.log("Error in getFollowingPosts controller: ", error);
@@ -276,55 +307,36 @@ export const getFollowingPosts = async (req, res) => {
 };
 
 export const getUserPosts = async (req, res) => {
-  try {
-    const { username } = req.params;
 
+  const { username } = req.params;
+
+  const { page = 1, limit = 10 } = req.query
+
+  const skip = (page - 1) * limit;
+
+  try {
     const user = await User.findOne({ username });
+
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const posts = await Post.find({ user: user._id })
-      .sort({ createdAt: -1 })
       .populate({
         path: "user",
         select: "-password",
       })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
 
-    res.status(200).json(posts);
+    const totalPosts = await Post.countDocuments({ user: user._id })
+
+    return res.status(200).json({
+      posts,
+      currentPage: page,
+      totalPages : Math.ceil(totalPosts / limit)
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
     console.log("Error in getUserPosts controller: ", error);
   }
 };
-
-// export const getSuggestedUsers = async (req, res) => {
-//   try {
-//     const userId = req.user._id;
-
-//     const currentUserWithOnlyFollowing = await User.findById(userId).select(
-//       "following"
-//     );
-
-//     const users = await User.aggregate([
-//       {
-//         $match: {
-//           _id: { $ne: userId },
-//         },
-//       },
-//       {
-//         $sample: { size: 10 },
-//       },
-//     ]);
-
-//     const filteredUsers = users.filter(
-//       (user) => !currentUserWithOnlyFollowing?.following.includes(user._id)
-//     );
-//     const suggestedUsers = filteredUsers.slice(0, 4);
-
-//     suggestedUsers.forEach((user) => (user.password = null));
-
-//     res.status(200).json(suggestedUsers);
-//   } catch (error) {
-//     console.log("Error in getSuggestedUsers: ", error.message);
-//     res.status(500).json({ error: error.message });
-//   }
-// };

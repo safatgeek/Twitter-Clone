@@ -1,17 +1,38 @@
 import Notification from "../models/notification.model.js";
 
 export const getNotifications = async (req, res) => {
-  try {
-    const userId = req.user._id;
 
-    const notifications = await Notification.find({ to: userId }).populate({
+  const { page = 1, limit = 10 } = req.query 
+
+  const skip = (page - 1) * limit
+
+  const userId = req.user._id;
+
+
+  try {
+    const notifications = await Notification.find({ to: userId })
+    .skip(skip)
+    .limit(parseInt(limit))
+    .sort({createdAt: -1})
+    .populate({
       path: "from",
       select: "username profileImg",
+    })
+
+    const notificationsIds = notifications.map((notification) => notification._id)
+
+    const totalNotifications = await Notification.countDocuments({ to: userId })
+    
+    await Notification.updateMany(
+      { _id: { $in : notificationsIds } },
+      { read: true}
+    )
+
+    return res.status(200).json({
+      notifications,
+      currentPage: page,
+      totalPages: Math.ceil(totalNotifications / limit)
     });
-
-    await Notification.updateMany({ to: userId }, { read: true });
-
-    res.status(200).json(notifications);
   } catch (error) {
     res.status(500).json({ error: error.message });
     console.log("Error in getNotifications controller: ", error);
