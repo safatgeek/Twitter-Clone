@@ -86,23 +86,4 @@ export const createOrGetChat = async (req, res) => {
   }
 };
 
-export const getUserChats = async (req, res) => {
-  const userId = req.user._id;
 
-  const { page = 1, limit = 10 } = req.query;
-
-  const skip = (page - 1) * limit;
-
-  try {
-    const chats = await Chat.find({ users: { $in: userId } })
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ updatedAt: -1 })
-      .populate("users", "username profileImg")
-      .populate("latestMessage");
-
-    return res.status(200).json(chats);
-  } catch (error) {
-    return res.status(500).json({ error: "Failed to get chats" });
-  }
-};
