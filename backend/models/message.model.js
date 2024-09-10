@@ -8,7 +8,8 @@ const messageSchema = new mongoose.Schema(
         required: true,
       },
       content: {
-        type: String,  // Message text or caption (optional for images/files)
+        type: String,
+        trim: true
       },
       chat: {
         type: mongoose.Schema.Types.ObjectId,

@@ -4,28 +4,28 @@ const chatSchema = new mongoose.Schema(
   {
     chatName: {
       type: String,
-      trim: true,  // Optional for naming group chats
+      trim: true
     },
     isGroupChat: {
       type: Boolean,
-      default: false,  // Whether this is a group chat or not
+      default: false
     },
     users: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',  // Reference to users in this chat (either 2 for private chat or multiple for group)
+        ref: 'User'
       },
     ],
     latestMessage: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Message',  // Reference to the latest message for performance optimization
+      ref: 'Message'
     },
     groupAdmin: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',  // Optional, for group chats only
+      ref: 'User'
     },
   },
-  { timestamps: true }  // Automatically adds createdAt and updatedAt fields
+  { timestamps: true }
 );
 
 const Chat =  mongoose.model("Chat", chatSchema)
