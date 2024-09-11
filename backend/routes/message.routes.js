@@ -1,13 +1,12 @@
-// import express from "express";
-// import { protectRoute } from "../middleware/protectRoute.js";
-// import { createOrGetChat, getUserChats, sendMessage } from "../controllers/message.controller.js";
+import express from "express";
+import { protectRoute } from "../middleware/protectRoute.js";
+import { getMessages, sendMessage } from "../controllers/message.controller.js";
 
-// const router = express.Router()
+const router = express.Router()
 
-// router.post("/:chatId", protectRoute, sendMessage )
+router.post("/", protectRoute, sendMessage )
 
-// router.post("/", protectRoute, createOrGetChat)
-// router.post("/chats", protectRoute, getUserChats)
+router.get("/:chatId", protectRoute, getMessages)
 
 
-// export default router
+export default router

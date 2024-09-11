@@ -7,7 +7,7 @@ import authRoutes from "./routes/auths.routes.js"
 import userRoutes from "./routes/user.routes.js"
 import postRoutes from "./routes/post.routes.js"
 import notificationRoutes from "./routes/notification.routes.js"
-// import messageRoutes from "./routes/message.routes.js"
+import messageRoutes from "./routes/message.routes.js"
 import chatRoutes from "./routes/chat.routes.js"
 
 
@@ -36,7 +36,7 @@ app.use("/api/users", userRoutes)
 app.use("/api/posts", postRoutes)
 app.use("/api/notifications", notificationRoutes)
 app.use("/api/chat", chatRoutes)
-// app.use("/api/messages", messageRoutes)
+app.use("/api/messages", messageRoutes)
 
 
 app.listen(PORT, () => {
