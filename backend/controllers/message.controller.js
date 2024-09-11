@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Message from "../models/message.model.js";
 import Chat from "./../models/chat.model.js";
 
@@ -13,6 +14,10 @@ export const sendMessage = async (req, res) => {
     let chat;
 
     if (chatId) {
+
+      if (!mongoose.Types.ObjectId.isValid(chatId)) {
+        return res.status(400).json({ error: "Invalid chat ID" });
+      }
 
       chat = await Chat.findById(chatId);
 
@@ -68,8 +73,49 @@ export const sendMessage = async (req, res) => {
 };
 
 
+export const getAllMessages = async (req, res) => {
+  try {
+    const { chatId, page = 1, limit = 20 } = req.query
 
-export const getMessages = async (req, res) => {
+    const skip = (page - 1) * limit
+
+
+
+    if (!chatId) {
+      return res.status(400).json({ error: "chatId is required" })
+    }
+
+    const isValidChatId = mongoose.Types.ObjectId.isValid(chatId)
+
+    if (!isValidChatId) {
+      return res.status(400).json({ error: "Invalid chatId" });
+
+    }
+
+    const totalMessages = await Message.countDocuments({ chat: chatId})
+
+    if (totalMessages == 0) {
+      return res.status(200).json({ message: "No message in this Chat"})
+    }
+
+    const messages = await Message.find({ chat: chatId})
+    .skip(skip)
+    .limit(parseInt(limit))
+    .sort({ createdAt: -1 })
+    .populate("sender", "-password")
+    .populate("chat")
+
+    return res.status(200).json({
+      messages,
+      currentPage: page,
+      totalPages: Math.ceil(totalMessages / limit)
+    })
+  } catch (error) {
+    console.error("Error in fetching messages:", error);
+    return res
+      .status(500)
+      .json({ error: "Error in the getAllMessages controller" });
+  }
 }
 
 

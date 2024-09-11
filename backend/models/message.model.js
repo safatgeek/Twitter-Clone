@@ -26,13 +26,13 @@ const messageSchema = new mongoose.Schema(
         default: 'text',
       },
       image: {
-        type: String,  // URL for the image
+        type: String, 
       },
       file: {
-        type: String,  // URL for the file
+        type: String, 
       },
       fileName: {
-        type: String,  // Original file name for files
+        type: String, 
       },
     },
     { timestamps: true }
