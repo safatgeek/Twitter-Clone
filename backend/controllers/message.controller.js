@@ -1,14 +1,18 @@
 import mongoose from "mongoose";
 import Message from "../models/message.model.js";
 import Chat from "./../models/chat.model.js";
+import { v2 as cloudinary } from "cloudinary";
 
 export const sendMessage = async (req, res) => {
-  const { chatId, content, messageType, image, file, fileName, recipientId } = req.body;
+  const { chatId, content, messageType, file, fileName, recipientId } = req.body;
+
+  let { image } = req.body 
+
   const senderId = req.user._id;
 
   try {
-    if (!content || !messageType) {
-      return res.status(400).json({ error: "Content and Message Type are required" });
+    if (!messageType) {
+      return res.status(400).json({ error: "Message Type are required" });
     }
 
     let chat;
@@ -27,7 +31,7 @@ export const sendMessage = async (req, res) => {
     } else {
 
       if (!recipientId) {
-        return res.status(400).json({ error: "Recipient is required for a new chat" });
+        return res.status(400).json({ error: "recipientId is required for a new chat" });
       }
 
       chat = await Chat.create({
@@ -36,13 +40,22 @@ export const sendMessage = async (req, res) => {
       });
     }
 
+    if (!content && !image && !(!file || !fileName)) {
+      return res.status(400).json({ error: "Post must have text or image or file !" });
+    }
+
+    if (image) {
+      const uploadedResponse = await cloudinary.uploader.upload(image);
+      image = uploadedResponse.secure_url;
+    }
+
     let newMessageData = {
       sender: senderId,
       chat: chat._id,
-      content: messageType === "text" ? content : "",
-      image: messageType === "image" ? image : null,
-      file: messageType === "file" ? file : null,
-      fileName: messageType === "file" ? fileName : null,
+      content: messageType == "text" ? content : "",
+      image: messageType == "image" ? image : null,
+      file: messageType == "file" ? file : null,
+      fileName: messageType == "file" ? fileName : null,
     };
 
     let message = await Message.create(newMessageData);
