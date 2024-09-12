@@ -18,7 +18,7 @@ router.get("/all", protectRoute, getAllPosts);
 router.get("/likes/:userid", protectRoute, getLikedPosts);
 router.get("/following", protectRoute, getFollowingPosts);
 router.get("/user/:username", protectRoute, getUserPosts);
-router.get("/moreComments", protectRoute, getMoreComments)
+router.get("/moreComments/:postId", protectRoute, getMoreComments)
 
 
 router.post("/create", protectRoute, createPost);

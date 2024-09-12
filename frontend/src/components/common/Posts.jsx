@@ -24,7 +24,7 @@ const Posts = ({ feedType, username, userId }) => {
   const POST_ENDPOINT = getPostEndpoint()
   console.log("Before fetched", POST_ENDPOINT)
 
-  const { data:posts, isLoading, refetch, isRefetching } = useQuery({
+  const { data:postsObject, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["posts"],
     queryFn: async () => {
       try {
@@ -40,7 +40,7 @@ const Posts = ({ feedType, username, userId }) => {
         return data
         
       } catch (error) {
-        throw new Error(error)
+        throw new Error(error.message)
       }
     },
   })
@@ -59,11 +59,11 @@ const Posts = ({ feedType, username, userId }) => {
           <PostSkeleton />
         </div>
       )}
-      {!isLoading && !isRefetching && posts?.length === 0 && <p>No post in this tab. Switch 👻</p>}
+      {!isLoading && !isRefetching && postsObject.posts.length === 0 && <p>No post in this tab. Switch 👻</p>}
 
-      {!isLoading && !isRefetching && posts && (
+      {!isLoading && !isRefetching && postsObject && (
         <div>
-          {posts.map((post) => (
+          {postsObject.posts.map((post) => (
             <Post key={post._id} post={post}/>
           ))}
         </div>

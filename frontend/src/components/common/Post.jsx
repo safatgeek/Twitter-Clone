@@ -15,6 +15,8 @@ import LoadingSpinner from "./LoadingSpinner";
 import { formatPostDate } from "../../utils/date";
 
 const Post = ({ post }) => {
+  console.log("Post component rendered");
+
   const [comment, setComment] = useState("");
 
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
@@ -31,6 +33,7 @@ const Post = ({ post }) => {
         const data = await res.json();
 
         if (!res.ok) {
+          // @ts-ignore
           throw new Error(error || "Something went wrong");
         }
 
@@ -59,7 +62,7 @@ const Post = ({ post }) => {
         if (!res.ok) {
           throw new Error(data.error);
         }
-        console.log("like post", data)
+        console.log("like post", data);
         return data;
       } catch (error) {
         throw new Error(error.message);
@@ -71,7 +74,8 @@ const Post = ({ post }) => {
       // queryClient.invalidateQueries({ queryKey: ["posts"] });
 
       queryClient.setQueryData(["posts"], (oldData) => {
-        console.log("should update")
+        console.log("should update");
+        // @ts-ignore
         return oldData.map((p) => {
           if (p._id === post._id) {
             return {
@@ -109,12 +113,13 @@ const Post = ({ post }) => {
       }
     },
 
-    onSuccess: (updatedComments) => {
+    onSuccess: (updatedComment) => {
       setComment("");
       queryClient.setQueryData(["posts"], (oldData) => {
+        // @ts-ignore
         return oldData.map((p) => {
           if (p._id === post._id) {
-            return { ...p, comments: updatedComments };
+            return { ...p, comments: p.comments.push(updatedComment) };
           }
 
           return p;
@@ -123,13 +128,54 @@ const Post = ({ post }) => {
     },
   });
 
+  // @ts-ignore
+  const [page, setPage] = useState(1);
+  // @ts-ignore
+  const [limit, setLimit] = useState(10);
+
+  console.log("Post ID:", post._id);
+  console.log("Page:", page);
+  console.log("Limit:", limit);
+
+  //query
+  const {
+    data: commentsObject,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["getComments", post._id],
+    queryFn: async () => {
+      try {
+        console.log("comments Fetch called");
+        const res = await fetch(`/api/posts/moreComments/${post._id}`);
+        console.log("Before Fetch called");
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error);
+        }
+
+        console.log("commentsObject is here", data);
+
+        return data;
+      } catch (error) {
+        console.log("error in query:", error);
+        throw new Error(error.message);
+      }
+    },
+  });
+
+  const comments = commentsObject?.comments || [];
+
   const postOwner = post.user;
 
   // const isLiked = post.likes.includes(authUser._id);
 
+  // @ts-ignore
   const isMyPost = authUser._id === post.user._id;
-  
-  const formattedDate = formatPostDate(post.createdAt)
+
+  const formattedDate = formatPostDate(post.createdAt);
 
   const handleDeletePost = () => {
     deletePost();
@@ -141,6 +187,7 @@ const Post = ({ post }) => {
     commentPost();
   };
 
+  // @ts-ignore
   const handleLikePost = (e) => {
     if (isLiking) return;
     likePost();
@@ -154,12 +201,15 @@ const Post = ({ post }) => {
 
   useEffect(() => {
     if (commentsRef.current) {
+      // @ts-ignore
       commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
     }
   }, [post.comments]);
 
   return (
     <div className="flex gap-2 items-start p-4 border-b border-gray-700">
+      <div>{isLoading && <div>Loading......</div>}</div>
+
       <div className="avatar">
         <Link
           to={`/profile/${postOwner.username}`}
@@ -212,12 +262,13 @@ const Post = ({ post }) => {
             <div
               className="flex gap-1 items-center cursor-pointer group"
               onClick={() =>
+                // @ts-ignore
                 document.getElementById("comments_modal" + post._id).showModal()
               }
             >
               <FaRegComment className="w-4 h-4 text-slate-500 group-hover:text-sky-400" />
               <span className="text-sm text-slate-500 group-hover:text-sky-400">
-                {/* {post.comments.length} */}
+                {comments.length}
               </span>
             </div>
 
@@ -231,11 +282,11 @@ const Post = ({ post }) => {
                   className="flex flex-col gap-3 max-h-60 overflow-auto"
                   ref={commentsRef}
                 >
-                  {/* {post.comments.length === 0 && (
+                  {comments.length === 0 && (
                     <p>No comments yet 🤔 Be the first one 😉</p>
-                  )} */}
+                  )}
 
-                  {/* {post.comments.map((comment) => {
+                  {comments.map((comment) => {
                     return (
                       <div key={comment._id} className="flex gap-2 items-start">
                         <div className="avatar">
@@ -267,7 +318,7 @@ const Post = ({ post }) => {
                         </div>
                       </div>
                     );
-                  })} */}
+                  })}
                 </div>
 
                 <form
@@ -302,11 +353,7 @@ const Post = ({ post }) => {
             {isLiking && (
               <div className="flex gap-1 items-center">
                 <GoHeartFill className="w-[18px] h-[18px] text-pink-300" />
-                <span
-                  className="text-pink-300"
-                >
-                  {post.likes.length}
-                </span>
+                <span className="text-pink-300">{post.likes.length}</span>
               </div>
             )}
 

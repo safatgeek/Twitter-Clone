@@ -91,16 +91,9 @@ export const commentOnPost = async (req, res) => {
 
     await commentPost.save();
 
-    const updatedComments = await Comment.find({ post: { $in: postId }})
-    .sort({ createdAt: -1 })
-    .populate({
-      path: "user",
-      select: "-password"
-    })
+    console.log(commentPost);
 
-    console.log(updatedComments);
-
-    res.status(200).json(updatedComments);
+    res.status(200).json(commentPost);
   } catch (error) {
     res.status(500).json({ error: error.message });
     console.log("Error in commentOnPost controller", error);
@@ -151,7 +144,9 @@ export const likeUnlikePost = async (req, res) => {
 };
 
 export const getMoreComments = async (req, res) => {
-  const { postId, page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10 } = req.query;
+
+  const { postId } = req.params;
 
   try {
     const comments = await Comment.find({ post: postId })
