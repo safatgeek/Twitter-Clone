@@ -37,12 +37,15 @@ app.use("/api/posts", postRoutes)
 app.use("/api/notifications", notificationRoutes)
 
 if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "/frontend/dist")))
+    // Serve static files from the 'frontend/dist' folder
+    app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
+    // Handle all routes by serving the 'index.html' from the build folder
     app.get("*", (req, res) => {
-        res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"))
-    })
+        res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+    });
 }
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
