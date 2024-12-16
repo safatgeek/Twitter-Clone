@@ -1,6 +1,7 @@
 // @ts-nocheck
 /** @type {import('tailwindcss').Config} */
 import daisyui from 'daisyui';
+import * as theming from 'daisyui/src/theming/themes';
 
 export default {
   content: [
@@ -17,13 +18,11 @@ export default {
       "light",
       {
         black: {
-          ...require("daisyui/src/theming/themes")["black"],
+          ...(theming.default || {})["black"],
           primary: "rgb(29, 155, 240)",
           secondary: "rgb(24, 24, 24)",
         },
       },
     ],
   },
-}
-
-
+};
